@@ -129,11 +129,24 @@ Example configuration:
   "defaultAgent": "cursor",
   "format": "text",
   "permissionMode": "approve-reads",
+  "authPolicy": "skip",
+  "auth": {},
   "agents": {
     "cursor": { "command": "agent", "args": ["acp"] }
   }
 }
 ```
+
+### Authentication
+
+Some agents advertise auth methods in their `initialize` response (e.g., API key, OAuth). codeye handles this after initialization:
+
+| Field         | Purpose                                                                 |
+| ------------- | ----------------------------------------------------------------------- |
+| **auth**      | Map of credential keys to values (e.g., `api_key`, `gemini-api-key`). Passed to the agent via env vars and used for the ACP `authenticate` call. |
+| **authPolicy**| `"skip"` (default): proceed without auth if no credentials found. `"fail"`: abort with an error when the agent advertises auth methods but no matching credentials exist. |
+
+Credentials are resolved from (in order): env vars `CODEYE_AUTH_<TOKEN>` or `<TOKEN>`, then the `auth` config map. Use `authPolicy: "fail"` in automation when the agent requires authentication; use `"skip"` for agents that work without it or already have cached creds.
 
 ## Automation & CI
 
