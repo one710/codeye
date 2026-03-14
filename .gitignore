@@ -1,0 +1,16 @@
+# Build outputs
+bin/
+dist/
+*.out
+
+# Go artifacts
+coverage.out
+*.test
+
+# Local runtime data
+.codeye/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
