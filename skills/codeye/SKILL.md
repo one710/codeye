@@ -4,7 +4,7 @@ description: Run ACP-compatible coding agents (Cursor or custom adapters) from C
 license: Apache-2.0
 metadata:
   author: one710
-  version: "1.0"
+  version: "0.2.0"
 ---
 
 # codeye Skill
