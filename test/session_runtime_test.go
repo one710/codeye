@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/one710/codeye/internal/acp"
 	"github.com/one710/codeye/internal/client"
 	"github.com/one710/codeye/internal/permissions"
 	"github.com/one710/codeye/internal/queue"
@@ -78,7 +79,7 @@ func TestRunOnce(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	stopReason, err := rt.RunOnce(ctx, cwd, "hello")
+	stopReason, err := rt.RunOnce(ctx, cwd, acp.TextPrompt("hello"))
 	if err != nil {
 		t.Fatalf("RunOnce: %v", err)
 	}
@@ -147,7 +148,7 @@ func TestPromptThroughQueue(t *testing.T) {
 	rec := persistence.Record{RecordID: "r1", ACPSession: "s1", Agent: "test", Cwd: t.TempDir()}
 	repo.Save(rec)
 
-	stopReason, err := rt.Prompt(context.Background(), rec, "hello")
+	stopReason, err := rt.Prompt(context.Background(), rec, acp.TextPrompt("hello"))
 	if err != nil {
 		t.Fatalf("Prompt: %v", err)
 	}
@@ -206,7 +207,7 @@ func TestPromptEmptyStopReasonDefault(t *testing.T) {
 	rec := persistence.Record{RecordID: "r1", ACPSession: "s1", Agent: "test", Cwd: root}
 	_ = repo.Save(rec)
 
-	stopReason, err := rt.Prompt(ctx, rec, "hello")
+	stopReason, err := rt.Prompt(ctx, rec, acp.TextPrompt("hello"))
 	if err != nil {
 		t.Fatalf("Prompt: %v", err)
 	}
@@ -217,7 +218,7 @@ func TestPromptEmptyStopReasonDefault(t *testing.T) {
 
 type emptyStopReasonHandler struct{}
 
-func (emptyStopReasonHandler) Prompt(_ context.Context, _, _ string) (queue.PromptResult, error) {
+func (emptyStopReasonHandler) Prompt(_ context.Context, _ string, _ []acp.PromptPart) (queue.PromptResult, error) {
 	return queue.PromptResult{StopReason: ""}, nil
 }
 func (emptyStopReasonHandler) Cancel(_ context.Context, _ string) error     { return nil }

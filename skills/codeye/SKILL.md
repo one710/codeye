@@ -55,6 +55,8 @@ codeye [global-options] [agent] <command> [command-args]
 - `--agent "<command ...>"`: custom ACP-compatible adapter command.
 - `--format <text|json|json-strict|quiet>`: output format.
 - `--json-strict`: alias for strict JSON output mode.
+- `--audio <path>`: add audio file to prompt/exec (repeatable; .wav, .mp3, .ogg, .flac, .m4a).
+- `--image <path>`: add image file to prompt/exec (repeatable; .png, .jpg, .gif, .webp).
 - `--approve-all`: allow all ACP tool requests.
 - `--approve-reads`: allow read-only tool requests, deny writes.
 - `--deny-all`: deny all ACP tool requests.
@@ -103,6 +105,45 @@ codeye cursor sessions close <session-id>
 codeye cursor exec "summarize this repository"
 codeye --agent "my-acp-adapter --stdio" exec "run a quick code review"
 ```
+
+## Image and audio in prompt/exec
+
+Place `--image` and `--audio` before the command. You can pass one or many files; they are sent as content blocks with the text prompt.
+
+**One image with text (exec):**
+
+```bash
+codeye --image screenshot.png exec "what is shown in this screenshot? list the main UI elements"
+```
+
+**One image with text (prompt):**
+
+```bash
+SID=$(codeye cursor sessions new | jq -r .sessionId)
+codeye --image diagram.png cursor prompt $SID "explain this diagram and suggest improvements"
+```
+
+**Multiple images with text:**
+
+```bash
+codeye --image before.png --image after.png exec "compare these two screenshots and describe what changed"
+codeye --image fig1.png --image fig2.png cursor prompt $SID "summarize the flow in these two figures"
+```
+
+**Audio with text (e.g. transcription or analysis):**
+
+```bash
+codeye --audio meeting.wav exec "transcribe this and list action items"
+codeye --audio intro.mp3 --audio outro.mp3 cursor prompt $SID "do these two clips sound consistent in tone?"
+```
+
+**Image and audio together:**
+
+```bash
+codeye --image slide.png --audio narration.wav exec "align this slide with the narration and suggest edits"
+```
+
+Supported image extensions: `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`. Audio: `.wav`, `.mp3`, `.ogg`, `.flac`, `.m4a`. The agent must advertise the corresponding prompt capabilities (image/audio) in initialization.
 
 ## Config file
 

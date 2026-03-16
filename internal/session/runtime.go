@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/one710/codeye/internal/acp"
 	"github.com/one710/codeye/internal/client"
 	"github.com/one710/codeye/internal/queue"
 	"github.com/one710/codeye/internal/session/persistence"
@@ -59,18 +60,18 @@ func (r *Runtime) CreateSession(ctx context.Context, agent, cwd, name string) (p
 	return rec, nil
 }
 
-func (r *Runtime) Prompt(ctx context.Context, rec persistence.Record, prompt string) (string, error) {
-	stopReason, _, err := r.PromptWithOutput(ctx, rec, prompt)
+func (r *Runtime) Prompt(ctx context.Context, rec persistence.Record, parts []acp.PromptPart) (string, error) {
+	stopReason, _, err := r.PromptWithOutput(ctx, rec, parts)
 	return stopReason, err
 }
 
-func (r *Runtime) PromptWithOutput(ctx context.Context, rec persistence.Record, prompt string) (string, string, error) {
-	return r.PromptInProcess(ctx, rec, prompt)
+func (r *Runtime) PromptWithOutput(ctx context.Context, rec persistence.Record, parts []acp.PromptPart) (string, string, error) {
+	return r.PromptInProcess(ctx, rec, parts)
 }
 
 // PromptInProcess runs the prompt in the current process with the same client as exec,
 // so streaming and permission prompts behave identically to exec.
-func (r *Runtime) PromptInProcess(ctx context.Context, rec persistence.Record, prompt string) (string, string, error) {
+func (r *Runtime) PromptInProcess(ctx context.Context, rec persistence.Record, parts []acp.PromptPart) (string, string, error) {
 	c := r.ClientFactory()
 	if err := c.Start(ctx); err != nil {
 		return "", "", err
@@ -86,7 +87,7 @@ func (r *Runtime) PromptInProcess(ctx context.Context, rec persistence.Record, p
 		rec.ACPSession = newSid
 		_ = r.Repo.Save(rec)
 	}
-	result, err := c.Prompt(ctx, sid, prompt)
+	result, err := c.Prompt(ctx, sid, parts)
 	if err != nil {
 		return "", "", err
 	}
@@ -193,12 +194,12 @@ func (r *Runtime) RunWorkingSession(ctx context.Context, initial persistence.Rec
 	return server.Run(ctx)
 }
 
-func (r *Runtime) RunOnce(ctx context.Context, cwd, prompt string) (string, error) {
-	stopReason, _, err := r.RunOnceWithOutput(ctx, cwd, prompt)
+func (r *Runtime) RunOnce(ctx context.Context, cwd string, parts []acp.PromptPart) (string, error) {
+	stopReason, _, err := r.RunOnceWithOutput(ctx, cwd, parts)
 	return stopReason, err
 }
 
-func (r *Runtime) RunOnceWithOutput(ctx context.Context, cwd, prompt string) (string, string, error) {
+func (r *Runtime) RunOnceWithOutput(ctx context.Context, cwd string, parts []acp.PromptPart) (string, string, error) {
 	c := r.ClientFactory()
 	if err := c.Start(ctx); err != nil {
 		return "", "", err
@@ -208,7 +209,7 @@ func (r *Runtime) RunOnceWithOutput(ctx context.Context, cwd, prompt string) (st
 	if err != nil {
 		return "", "", err
 	}
-	result, err := c.Prompt(ctx, sid, prompt)
+	result, err := c.Prompt(ctx, sid, parts)
 	if err != nil {
 		return "", "", err
 	}
@@ -250,14 +251,14 @@ type workingSessionHandler struct {
 	fullMessage   string // set when we get a non-chunk final message to avoid duplicating chunk content
 }
 
-func (w *workingSessionHandler) Prompt(ctx context.Context, sessionID, prompt string) (queue.PromptResult, error) {
+func (w *workingSessionHandler) Prompt(ctx context.Context, sessionID string, parts []acp.PromptPart) (queue.PromptResult, error) {
 	w.mu.Lock()
 	activeSessionID := w.liveSessionID
 	w.chunks = nil
 	w.fullMessage = ""
 	w.mu.Unlock()
 
-	result, err := w.client.Prompt(ctx, activeSessionID, prompt)
+	result, err := w.client.Prompt(ctx, activeSessionID, parts)
 	if err != nil && shouldRecreateSessionOnPromptError(err) {
 		// Agent rejected stale/unknown session; recreate once and retry.
 		if sid, createErr := w.client.CreateSession(ctx, w.cwd); createErr == nil {
@@ -268,7 +269,7 @@ func (w *workingSessionHandler) Prompt(ctx context.Context, sessionID, prompt st
 				_ = w.repo.Save(w.record)
 			}
 			w.mu.Unlock()
-			result, err = w.client.Prompt(ctx, sid, prompt)
+			result, err = w.client.Prompt(ctx, sid, parts)
 		}
 	}
 	if err != nil {

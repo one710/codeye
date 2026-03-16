@@ -32,6 +32,8 @@ type globalFlags struct {
 	AgentCommand string
 	Format       output.Format
 	PermMode     permissions.Mode
+	AudioPaths   []string
+	ImagePaths   []string
 }
 
 func Run(argv []string) int {
@@ -114,7 +116,7 @@ func Run(argv []string) int {
 	)
 
 	ctx := context.Background()
-	code := dispatch(ctx, out, repo, rt, adapter, agent, flags.Cwd, cmd, cmdArgs, flags.PermMode, flags.Format)
+	code := dispatch(ctx, out, repo, rt, adapter, agent, flags.Cwd, cmd, cmdArgs, flags.PermMode, flags.Format, flags.AudioPaths, flags.ImagePaths)
 	return code
 }
 
@@ -130,15 +132,21 @@ func dispatch(
 	args []string,
 	permMode permissions.Mode,
 	format output.Format,
+	audioPaths, imagePaths []string,
 ) int {
 	switch cmd {
 	case "prompt":
 		if len(args) < 2 {
-			out.PrintRPCError(-32602, "usage: prompt <session-id> <text...>", map[string]interface{}{"errorCode": cerr.CodeUsage})
+			out.PrintRPCError(-32602, "usage: prompt <session-id> <text...> [--audio <path>...] [--image <path>...]", map[string]interface{}{"errorCode": cerr.CodeUsage})
 			return 2
 		}
 		sessionID := args[0]
 		promptText := strings.Join(args[1:], " ")
+		parts, err := BuildPromptParts(promptText, imagePaths, audioPaths)
+		if err != nil {
+			out.PrintError(err.Error())
+			return 1
+		}
 		rec, err := repo.Load(sessionID)
 		if err != nil {
 			out.PrintError("session not found: " + sessionID)
@@ -149,7 +157,7 @@ func dispatch(
 			return 1
 		}
 		// ACP: session/load (by agent) restores conversation history; then session/prompt. All in-process.
-		stopReason, responseText, err := rt.PromptWithOutput(ctx, rec, promptText)
+		stopReason, responseText, err := rt.PromptWithOutput(ctx, rec, parts)
 		if err != nil {
 			out.PrintError(err.Error())
 			return 1
@@ -163,11 +171,16 @@ func dispatch(
 		}, "")
 		return 0
 	case "exec":
-		if len(args) == 0 {
-			out.PrintRPCError(-32602, "prompt is required", map[string]interface{}{"errorCode": cerr.CodeUsage})
+		if len(args) == 0 && len(audioPaths) == 0 && len(imagePaths) == 0 {
+			out.PrintRPCError(-32602, "prompt text or --audio/--image is required", map[string]interface{}{"errorCode": cerr.CodeUsage})
 			return 2
 		}
-		stopReason, responseText, err := rt.RunOnceWithOutput(ctx, cwd, strings.Join(args, " "))
+		parts, err := BuildPromptParts(strings.Join(args, " "), imagePaths, audioPaths)
+		if err != nil {
+			out.PrintError(err.Error())
+			return 1
+		}
+		stopReason, responseText, err := rt.RunOnceWithOutput(ctx, cwd, parts)
 		if err != nil {
 			out.PrintError(err.Error())
 			return 1
@@ -428,6 +441,16 @@ func parseGlobals(args []string) (globalFlags, []string, error) {
 			flags.PermMode = permissions.DenyAll
 		case "--ask":
 			flags.PermMode = permissions.Ask
+		case "--audio":
+			i++
+			if i < len(args) {
+				flags.AudioPaths = append(flags.AudioPaths, args[i])
+			}
+		case "--image":
+			i++
+			if i < len(args) {
+				flags.ImagePaths = append(flags.ImagePaths, args[i])
+			}
 		default:
 			if strings.HasPrefix(arg, "--") {
 				return flags, nil, fmt.Errorf("unknown flag: %s", arg)

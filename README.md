@@ -101,17 +101,21 @@ codeye --agent "my-custom-agent --stdio" prompt <session-id> "review security po
 
 ### Global Options
 
-| Flag              | Description                                                 |
-| ----------------- | ----------------------------------------------------------- |
-| `--cwd <path>`    | Run in a specific working directory                         |
-| `--agent "<cmd>"` | Use a custom ACP-compatible agent command                   |
-| `--format <mode>` | Output format: `text`, `json`, `json-strict`, `quiet`       |
-| `--json-strict`   | Shorthand for `--format json-strict`                        |
-| `--approve-all`   | Allow all agent tool requests                               |
-| `--approve-reads` | Allow read-only tool requests, deny writes                  |
-| `--deny-all`      | Deny all agent tool requests                                |
-| `--ask`           | Prompt to approve or reject each tool request (interactive) |
-| `--version`, `-V` | Print version                                               |
+| Flag                | Description                                                 |
+| ------------------- | ----------------------------------------------------------- |
+| `--cwd <path>`      | Run in a specific working directory                         |
+| `--agent "<cmd>"`   | Use a custom ACP-compatible agent command                   |
+| `--format <mode>`   | Output format: `text`, `json`, `json-strict`, `quiet`       |
+| `--json-strict`     | Shorthand for `--format json-strict`                        |
+| `--audio <path>`    | Add audio file(s) to prompt/exec (repeatable). Supports .wav, .mp3, .ogg, .flac, .m4a |
+| `--image <path>`    | Add image file(s) to prompt/exec (repeatable). Supports .png, .jpg, .gif, .webp |
+| `--approve-all`     | Allow all agent tool requests                               |
+| `--approve-reads`   | Allow read-only tool requests, deny writes                  |
+| `--deny-all`        | Deny all agent tool requests                                |
+| `--ask`             | Prompt to approve or reject each tool request (interactive) |
+| `--version`, `-V`   | Print version                                               |
+
+For `prompt` and `exec`, place `--audio` and `--image` before the command (e.g. `codeye --image diagram.png prompt <session-id> "describe this"`). Agents must advertise the corresponding prompt capabilities (image/audio) in initialization.
 
 ## Configuration
 

@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/one710/codeye/internal/acp"
 	"github.com/one710/codeye/internal/client"
 	"github.com/one710/codeye/internal/permissions"
 )
@@ -113,7 +114,7 @@ func TestAgentsIntegration_Exec(t *testing.T) {
 			}
 			ctxPrompt, cancelPrompt := context.WithTimeout(ctx, 2*time.Minute)
 			defer cancelPrompt()
-			result, err := c.Prompt(ctxPrompt, sid, "Reply with exactly: OK")
+			result, err := c.Prompt(ctxPrompt, sid, acp.TextPrompt("Reply with exactly: OK"))
 			if err != nil {
 				t.Fatalf("Prompt: %v", err)
 			}
@@ -150,7 +151,7 @@ func TestAgentsIntegration_Prompt(t *testing.T) {
 			}
 			ctxPrompt, cancelPrompt := context.WithTimeout(ctx, 2*time.Minute)
 			defer cancelPrompt()
-			_, err = c.Prompt(ctxPrompt, sid, "What is 2+2? Reply with one word.")
+			_, err = c.Prompt(ctxPrompt, sid, acp.TextPrompt("What is 2+2? Reply with one word."))
 			if err != nil {
 				t.Fatalf("Prompt: %v", err)
 			}
@@ -186,13 +187,13 @@ func TestAgentsIntegration_FollowUpPrompt(t *testing.T) {
 			defer cancelPrompt()
 
 			// First prompt: establish context the agent must remember
-			_, err = c.Prompt(ctxPrompt, sid, "Remember this secret code: CODESESSION99. You will be asked for it next. Reply with OK.")
+			_, err = c.Prompt(ctxPrompt, sid, acp.TextPrompt("Remember this secret code: CODESESSION99. You will be asked for it next. Reply with OK."))
 			if err != nil {
 				t.Fatalf("First prompt: %v", err)
 			}
 
 			// Second prompt: ask for the remembered context
-			result, err := c.Prompt(ctxPrompt, sid, "What was the secret code I asked you to remember? Reply with only the code, nothing else.")
+			result, err := c.Prompt(ctxPrompt, sid, acp.TextPrompt("What was the secret code I asked you to remember? Reply with only the code, nothing else."))
 			if err != nil {
 				t.Fatalf("Follow-up prompt: %v", err)
 			}
@@ -266,7 +267,7 @@ func TestAgentsIntegration_PermissionModes(t *testing.T) {
 			if err != nil {
 				t.Fatalf("CreateSession: %v", err)
 			}
-			result, err := c.Prompt(ctx, sid, "test-tools")
+			result, err := c.Prompt(ctx, sid, acp.TextPrompt("test-tools"))
 			if err != nil {
 				t.Fatalf("Prompt: %v", err)
 			}

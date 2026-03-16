@@ -242,7 +242,10 @@ func (c *Client) ListSessions(ctx context.Context, cwd string) ([]string, error)
 	return out, nil
 }
 
-func (c *Client) Prompt(ctx context.Context, sessionID, text string) (PromptResult, error) {
+func (c *Client) Prompt(ctx context.Context, sessionID string, parts []acp.PromptPart) (PromptResult, error) {
+	if len(parts) == 0 {
+		parts = []acp.PromptPart{{Type: "text", Text: ""}}
+	}
 	c.updateMu.Lock()
 	c.activePromptSessionID = sessionID
 	c.activePromptChunks = nil
@@ -256,9 +259,7 @@ func (c *Client) Prompt(ctx context.Context, sessionID, text string) (PromptResu
 
 	res, err := c.call(ctx, acp.MethodSessionPrompt, acp.SessionPromptRequest{
 		SessionID: sessionID,
-		Prompt: []acp.PromptTextPart{
-			{Type: "text", Text: text},
-		},
+		Prompt:    parts,
 	})
 	if err != nil {
 		return PromptResult{}, err
