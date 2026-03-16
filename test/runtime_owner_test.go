@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/one710/codeye/internal/acp"
 	"github.com/one710/codeye/internal/client"
 	"github.com/one710/codeye/internal/permissions"
 	"github.com/one710/codeye/internal/queue"
@@ -134,7 +135,7 @@ func TestEnsureWorkingSessionHealthyShortCircuit(t *testing.T) {
 	rec := persistence.Record{RecordID: "r1", ACPSession: "s1", Agent: "test", Cwd: root}
 	repo.Save(rec)
 
-	stopReason, err := rt.Prompt(ctx, rec, "test")
+	stopReason, err := rt.Prompt(ctx, rec, acp.TextPrompt("test"))
 	if err != nil {
 		t.Fatalf("Prompt should succeed when queue is already healthy: %v", err)
 	}
@@ -200,7 +201,7 @@ func TestRunOnceClientStartFails(t *testing.T) {
 	rt := session.NewRuntime(repo, shortSocketForRuntime(t), 5*time.Second, 4, func() *client.Client {
 		return client.New(client.Options{})
 	})
-	_, err := rt.RunOnce(context.Background(), root, "hello")
+	_, err := rt.RunOnce(context.Background(), root, acp.TextPrompt("hello"))
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -236,7 +237,7 @@ func TestPromptRespNotOK(t *testing.T) {
 	repo := persistence.New(root)
 	rt := session.NewRuntime(repo, socket, 5*time.Second, 4, nil)
 	rec := persistence.Record{RecordID: "r1", ACPSession: "s1", Agent: "test", Cwd: root}
-	_, err := rt.Prompt(ctx, rec, "hello")
+	_, err := rt.Prompt(ctx, rec, acp.TextPrompt("hello"))
 	if err == nil {
 		t.Fatal("expected error for failed prompt")
 	}

@@ -8,10 +8,12 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"github.com/one710/codeye/internal/acp"
 )
 
 type Handler interface {
-	Prompt(ctx context.Context, sessionID, prompt string) (PromptResult, error)
+	Prompt(ctx context.Context, sessionID string, parts []acp.PromptPart) (PromptResult, error)
 	Cancel(ctx context.Context, sessionID string) error
 	SetMode(ctx context.Context, sessionID, mode string) error
 	SetConfigOption(ctx context.Context, sessionID, key, value string) error
@@ -122,7 +124,11 @@ func (s *Server) Run(ctx context.Context) error {
 func (s *Server) dispatch(ctx context.Context, req Request) (Response, error) {
 	switch req.Command {
 	case CmdPrompt:
-		result, err := s.Handler.Prompt(ctx, req.SessionID, req.Prompt)
+		parts := req.PromptParts
+		if len(parts) == 0 {
+			parts = []acp.PromptPart{{Type: "text", Text: req.Prompt}}
+		}
+		result, err := s.Handler.Prompt(ctx, req.SessionID, parts)
 		if err != nil {
 			return Response{}, err
 		}

@@ -46,14 +46,23 @@ type SessionListResponse struct {
 	Sessions []SessionListEntry `json:"sessions"`
 }
 
-type PromptTextPart struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
+// PromptPart is one content block in a session/prompt request.
+// For text: Type="text", Text set. For image/audio: Type="image"|"audio", MimeType and Data (base64) set.
+type PromptPart struct {
+	Type     string `json:"type"`
+	Text     string `json:"text,omitempty"`
+	MimeType string `json:"mimeType,omitempty"`
+	Data     string `json:"data,omitempty"` // base64-encoded for image/audio
+}
+
+// TextPrompt returns a single text prompt part (convenience for callers that have only text).
+func TextPrompt(text string) []PromptPart {
+	return []PromptPart{{Type: "text", Text: text}}
 }
 
 type SessionPromptRequest struct {
-	SessionID string           `json:"sessionId"`
-	Prompt    []PromptTextPart `json:"prompt"`
+	SessionID string       `json:"sessionId"`
+	Prompt    []PromptPart `json:"prompt"`
 }
 
 type SessionPromptResponse struct {

@@ -8,12 +8,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/one710/codeye/internal/acp"
 	"github.com/one710/codeye/internal/queue"
 )
 
 type stubHandler struct{}
 
-func (stubHandler) Prompt(_ context.Context, _, _ string) (queue.PromptResult, error) {
+func (stubHandler) Prompt(_ context.Context, _ string, _ []acp.PromptPart) (queue.PromptResult, error) {
 	return queue.PromptResult{StopReason: "end_turn"}, nil
 }
 func (stubHandler) Cancel(_ context.Context, _ string) error     { return nil }
@@ -24,7 +25,7 @@ func (stubHandler) SetConfigOption(_ context.Context, _, _, _ string) error {
 
 type failHandler struct{}
 
-func (failHandler) Prompt(_ context.Context, _, _ string) (queue.PromptResult, error) {
+func (failHandler) Prompt(_ context.Context, _ string, _ []acp.PromptPart) (queue.PromptResult, error) {
 	return queue.PromptResult{}, fmt.Errorf("prompt failed")
 }
 func (failHandler) Cancel(_ context.Context, _ string) error { return fmt.Errorf("cancel failed") }
@@ -179,7 +180,7 @@ func TestSetConfigFailureReturnsError(t *testing.T) {
 
 type slowHandler struct{}
 
-func (slowHandler) Prompt(_ context.Context, _, _ string) (queue.PromptResult, error) {
+func (slowHandler) Prompt(_ context.Context, _ string, _ []acp.PromptPart) (queue.PromptResult, error) {
 	time.Sleep(2 * time.Second)
 	return queue.PromptResult{StopReason: "end_turn"}, nil
 }

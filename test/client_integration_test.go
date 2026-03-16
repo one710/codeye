@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/one710/codeye/internal/acp"
 	"github.com/one710/codeye/internal/client"
 	"github.com/one710/codeye/internal/permissions"
 )
@@ -61,7 +62,7 @@ func TestClientLifecycleWithMockAgent(t *testing.T) {
 	if sid == "" {
 		t.Fatal("expected session id")
 	}
-	result, err := c.Prompt(ctx, sid, "hello")
+	result, err := c.Prompt(ctx, sid, acp.TextPrompt("hello"))
 	if err != nil {
 		t.Fatalf("Prompt: %v", err)
 	}
@@ -88,7 +89,7 @@ func TestLoadSessionReplayDrainSuppressesReplayUpdates(t *testing.T) {
 	if got := atomic.LoadInt32(&updates); got != 0 {
 		t.Fatalf("expected replay updates suppressed, got %d", got)
 	}
-	if _, err := c.Prompt(ctx, sid, "live"); err != nil {
+	if _, err := c.Prompt(ctx, sid, acp.TextPrompt("live")); err != nil {
 		t.Fatalf("Prompt: %v", err)
 	}
 	if got := atomic.LoadInt32(&updates); got == 0 {
@@ -228,7 +229,7 @@ func TestToolHandlingDuringPrompt(t *testing.T) {
 	}
 	defer c.Close()
 	sid, _ := c.CreateSession(ctx, toolDir)
-	result, err := c.Prompt(ctx, sid, "test-tools")
+	result, err := c.Prompt(ctx, sid, acp.TextPrompt("test-tools"))
 	if err != nil {
 		t.Fatalf("Prompt with tools: %v", err)
 	}
@@ -256,7 +257,7 @@ func TestPromptEmptyStopReasonDefaultsToEndTurn(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateSession: %v", err)
 	}
-	result, err := c.Prompt(ctx, sid, "no-stop-reason")
+	result, err := c.Prompt(ctx, sid, acp.TextPrompt("no-stop-reason"))
 	if err != nil {
 		t.Fatalf("Prompt: %v", err)
 	}

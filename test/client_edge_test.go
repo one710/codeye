@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/one710/codeye/internal/acp"
 	"github.com/one710/codeye/internal/client"
 	"github.com/one710/codeye/internal/permissions"
 )
@@ -20,7 +21,7 @@ func TestClientPromptWithEmptyStopReason(t *testing.T) {
 	}
 	defer c.Close()
 	sid, _ := c.CreateSession(ctx, t.TempDir())
-	result, err := c.Prompt(ctx, sid, "hello")
+	result, err := c.Prompt(ctx, sid, acp.TextPrompt("hello"))
 	if err != nil {
 		t.Fatalf("Prompt: %v", err)
 	}
@@ -135,7 +136,7 @@ func TestClientToolHandlingDenyAll(t *testing.T) {
 	c.Start(ctx)
 	defer c.Close()
 	sid, _ := c.CreateSession(ctx, toolDir)
-	result, err := c.Prompt(ctx, sid, "test-tools")
+	result, err := c.Prompt(ctx, sid, acp.TextPrompt("test-tools"))
 	if err != nil {
 		t.Fatalf("Prompt should succeed even with deny-all: %v", err)
 	}

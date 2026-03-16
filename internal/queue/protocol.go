@@ -1,5 +1,7 @@
 package queue
 
+import "github.com/one710/codeye/internal/acp"
+
 type Command string
 
 const (
@@ -11,13 +13,14 @@ const (
 )
 
 type Request struct {
-	RequestID string  `json:"requestId,omitempty"`
-	Command   Command `json:"command"`
-	SessionID string  `json:"sessionId"`
-	Prompt    string  `json:"prompt,omitempty"`
-	Mode      string  `json:"mode,omitempty"`
-	Key       string  `json:"key,omitempty"`
-	Value     string  `json:"value,omitempty"`
+	RequestID   string           `json:"requestId,omitempty"`
+	Command     Command          `json:"command"`
+	SessionID   string           `json:"sessionId"`
+	Prompt      string           `json:"prompt,omitempty"`      // legacy: single text part
+	PromptParts []acp.PromptPart `json:"promptParts,omitempty"` // when set, used instead of Prompt
+	Mode        string           `json:"mode,omitempty"`
+	Key         string           `json:"key,omitempty"`
+	Value       string           `json:"value,omitempty"`
 }
 
 type Response struct {
