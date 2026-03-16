@@ -1,3 +1,12 @@
+---
+name: codeye
+description: Run ACP-compatible coding agents (Cursor or custom adapters) from CLI with persistent sessions. Use when running codeye, managing Cursor/ACP sessions, or automating agent workflows from the command line.
+license: Apache-2.0
+metadata:
+  author: one710
+  version: "1.0"
+---
+
 # codeye Skill
 
 Use `codeye` to run ACP-compatible coding agents (Cursor or custom adapters) from CLI with persistent sessions.
